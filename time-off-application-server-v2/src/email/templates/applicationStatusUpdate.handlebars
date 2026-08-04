@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  {{> styles}}
+</head>
+
+<body>
+  <p>Dear {{application.officer.firstName}},</p>
+  <p>
+    The following time off application has been
+    <span class="{{status}}"><strong>{{status}}</strong></span>.
+  </p>
+  {{> application newAppl=application}}
+</body>
+
+</html>

@@ -1,0 +1,13 @@
+{
+  "apps": [
+    {
+      "name": "time-off-server-v2",
+      "script": "src/app.js",
+      "out_file": "log/process.log",
+      "error_file": "log/process.log",
+      "env": {
+        "NODE_ENV": "production"
+      }
+    }
+  ]
+}

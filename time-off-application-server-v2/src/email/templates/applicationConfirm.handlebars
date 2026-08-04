@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  {{> styles}}
+</head>
+
+<body>
+  <p>Dear {{newApplication.officer.firstName}},</p>
+  <p>
+    I would like to inform you that we received your time off application.
+    Our manager is currently reviewing your application.
+    In any case, we will keep you posted on the status of your application.
+  </p>
+  <p>Please find your submitted application as follow:</p>
+  {{> application newAppl=newApplication oldAppl=oldApplication}}
+</body>
+
+</html>

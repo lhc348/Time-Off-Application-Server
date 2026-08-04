@@ -1,0 +1,91 @@
+<p>
+  <strong>Application ID:</strong>
+  {{newAppl.id}}
+</p>
+
+<p>
+  <strong>Officer:</strong>
+  {{newAppl.officer.firstName}} {{newAppl.officer.lastName}}
+</p>
+
+<p><strong>Tasks:</strong></p>
+<table style="margin-left: 16px">
+  <tbody>
+    <tr>
+      <td>Date: </td>
+      <td>{{> diff oldValue=(formatDateTime oldAppl.task.date) newValue=(formatDateTime newAppl.task.date)}}</td>
+    </tr>
+    <tr>
+      <td>Status: </td>
+      <td>{{> diff oldValue=oldAppl.task.status newValue=newAppl.task.status}}</td>
+    </tr>
+    <tr>
+      <td>Onsite: </td>
+      <td>{{> diff oldValue=oldAppl.task.onsite newValue=newAppl.task.onsite}}</td>
+    </tr>
+    <tr>
+      <td>Details: </td>
+    </tr>
+    <tr>
+      <td colspan="2" style="white-space: pre; margin-left: 16px">{{> diff
+        oldValue=oldAppl.task.details
+        newValue=newAppl.task.details
+        }}</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><strong>Time Offs:</strong></p>
+{{#if (isEqual oldAppl.timeOffs newAppl.timeOffs)}}
+  {{#each newAppl.timeOffs}}
+    <table style="margin-left: 16px">
+      <tbody>
+        <tr>
+          <td>
+            Date:
+          </td>
+          <td>
+            {{formatDate this.date}}
+          </td>
+        </tr>
+        <tr>
+          <td>
+            Session:
+          </td>
+          <td>
+            {{this.session}}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  {{/each}}
+{{else}}
+ {{#each oldAppl.timeOffs}}
+    <table style="margin-left: 16px">
+      <tbody>
+        <tr>
+          <td>Date: </td>
+          <td>{{> diff oldValue=(formatDate this.date) newValue=""}}</td>
+        </tr>
+        <tr>
+          <td>Session: </td>
+          <td>{{> diff oldValue=this.session newValue=""}}</td>
+        </tr>
+      </tbody>
+    </table>
+  {{/each}}
+  {{#each newAppl.timeOffs}}
+    <table style="margin-left: 16px">
+      <tbody>
+        <tr>
+          <td>Date: </td>
+          <td>{{> diff oldValue="" newValue=(formatDate this.date)}}</td>
+        </tr>
+        <tr>
+          <td>Session: </td>
+          <td>{{> diff oldValue="" newValue=this.session}}</td>
+        </tr>
+      </tbody>
+    </table>
+  {{/each}}
+{{/if}}

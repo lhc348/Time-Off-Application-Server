@@ -1,0 +1,19 @@
+{{#if (diff oldValue newValue)}}
+  {{#if (isMultiline oldValue newValue)}}
+    <del>
+      {{oldValue}}
+    </del>
+    <ins>
+      {{newValue}}
+    </ins>
+  {{else}}
+    <del>
+      {{oldValue}}
+    </del>
+    <ins>
+      {{newValue}}
+    </ins>
+  {{/if}}
+{{else}}
+  {{newValue}}
+{{/if}}
