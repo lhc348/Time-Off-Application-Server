@@ -137,8 +137,8 @@ module.exports = {
     WHERE
       submit_to_hr = TRUE
       AND application.status = 'approved'
-      AND last_updated >= TIMESTAMP(?)
-      AND last_updated <= TIMESTAMP(?)
+      AND time_off.date >= ?
+      AND time_off.date <= ?
       AND (? IS NULL OR body_shopper = ?)
     GROUP BY application.id
   `
