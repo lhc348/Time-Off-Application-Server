@@ -31,7 +31,7 @@ module.exports = {
     VALUES (?, ?, ?, ?, ?, ?)
   `,
   INSERT_TIME_OFF: `
-    INSERT INTO time_off (application_id, date, session)
+    INSERT INTO time_off (application_id, date, start_time, session)
     VALUES ?
   `,
   UPDATE_APPLICATION_STATUS: `
@@ -44,7 +44,7 @@ module.exports = {
     WHERE id = ?
   `,
   QUERY_TIME_OFFS_BY_APPLICATION_ID: `
-    SELECT date, session FROM time_off WHERE application_id = ?
+    SELECT date, start_time AS startTime, session FROM time_off WHERE application_id = ?
   `,
   QUERY_APPLICATIONS: `
     SELECT * 
@@ -85,46 +85,44 @@ module.exports = {
       DATE_FORMAT(task_date, '%e-%b-%y') AS 'Date',
       DAYNAME(task_date) AS 'Weekday',
       DATE_FORMAT(task_date, '%k:%i') AS 'Time Start',
-      DATE_FORMAT(
-        CASE
-          WHEN
-            COUNT(time_off.session) > 1
-            OR (
-              COUNT(time_off.session) = 1
-              AND time_off.session = 'full day'
-            )
-          THEN ADDTIME(task_date, '7:48')
-          ELSE ADDTIME(task_date, '3:54')
-        END,
-        '%k:%i'
-      ) AS "Time End",
-      HOUR(
-        CASE
-          WHEN
-            COUNT(time_off.session) > 1
-            OR (
-              COUNT(time_off.session) = 1
-              AND time_off.session = 'full day'
-            )
-          THEN TIME('7:48')
-          ELSE TIME('3:54')
-        END
-      ) AS "hour",
-      MINUTE(
-        CASE
-          WHEN
-            COUNT(time_off.session) > 1
-            OR (
-              COUNT(time_off.session) = 1
-              AND time_off.session = 'full day'
-            )
-          THEN TIME('7:48')
-          ELSE TIME('3:54')
-        END
-      ) AS "min",
+      DATE_FORMAT(ADDTIME(task_date, SEC_TO_TIME(
+        SUM(
+          CASE
+            WHEN time_off.session = 'Full Day' THEN 468*60
+            WHEN time_off.session = '1/4 Day' THEN 117*60
+            WHEN time_off.session IN ('AM','PM') THEN 234*60
+            ELSE 0
+          END
+        )
+      )), '%k:%i') AS "Time End",
+      HOUR(SEC_TO_TIME(
+        SUM(
+          CASE
+            WHEN time_off.session = 'Full Day' THEN 468*60
+            WHEN time_off.session = '1/4 Day' THEN 117*60
+            WHEN time_off.session IN ('AM','PM') THEN 234*60
+            ELSE 0
+          END
+        )
+      )) AS "hour",
+      MINUTE(SEC_TO_TIME(
+        SUM(
+          CASE
+            WHEN time_off.session = 'Full Day' THEN 468*60
+            WHEN time_off.session = '1/4 Day' THEN 117*60
+            WHEN time_off.session IN ('AM','PM') THEN 234*60
+            ELSE 0
+          END
+        )
+      )) AS "min",
       task_details AS 'Considerations Given in Approving Overtime Work',
       GROUP_CONCAT(
-        DISTINCT 'TimeOff on ', time_off.date, ' ', time_off.session
+        DISTINCT 'TimeOff on ', time_off.date, ' ',
+        CASE
+          WHEN time_off.session = '1/4 Day' 
+            THEN CONCAT(time_off.session, ' starting ', DATE_FORMAT(time_off.start_time, '%H:%i'))
+          ELSE time_off.session
+        END
         ORDER BY time_off.date
         SEPARATOR '\n'
       ) AS 'Remark'
