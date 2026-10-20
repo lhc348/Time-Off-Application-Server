@@ -21,15 +21,27 @@ if (process.env.NODE_ENV === "production") app.use(ntlm);
 
 app.get("/", (_, res) => res.sendFile("index.html", { root: "app" }));
 
+// Helper: map session -> minutes
+function sessionToMinutes(session) {
+  const s = (session || "").toLowerCase();
+  if (s.includes("full")) return 7 * 60 + 48; // 468
+  if (s.includes("1/4") || s.includes("quarter")) return 1 * 60 + 57; // 117
+  // AM/PM or any other -> half day
+  return 3 * 60 + 54; // 234
+}
+
 // Helper: calculate OT duration in minutes based on timeOffs
 function calculateOtDurationMinutes(timeOffs) {
   if (!timeOffs || timeOffs.length === 0) return 0;
   // If multiple timeOff entries count as a full day
-  if (timeOffs.length > 1) return 7 * 60 + 48; // 7h48m = 468 minutes
-  const session = (timeOffs[0].session || "").toLowerCase();
-  if (session === "full day" || session === "fullday" || session === "full-day") return 7 * 60 + 48;
+  //if (timeOffs.length > 1) return 7 * 60 + 48; // 7h48m = 468 minutes
+  //const session = (timeOffs[0].session || "").toLowerCase();
+  //if (session === "full day" || session === "fullday" || session === "full-day") return 7 * 60 + 48;
   // default to half day
-  return 3 * 60 + 54; // 3h54m = 234 minutes
+  //return 3 * 60 + 54; // 3h54m = 234 minutes
+  // Sum minutes of each session (supports AM/PM, Full Day, 1/4 Day)
+  const total = timeOffs.reduce((sum, t) => sum + sessionToMinutes(t.session), 0);
+  return total;
 }
 
 // Helper: check whether [start, end) intersects office hours (08:45-17:33) on any weekday
@@ -95,10 +107,14 @@ app.post(`${urls.APPLICATION}/:id/:status`, asyncHandler(async (req, res) => {
 app.post(urls.APPLY, asyncHandler(async (req, res) => {
   const { application, actingApproverCorpId } = req.body;
 
-  // Validate OT does not intersect office hours on weekdays
+  // Validate OT does not intersect office hours on weekdays and total not exceed 1 full day
   try {
     const start = new Date(application.task.date);
     const durationMinutes = calculateOtDurationMinutes(application.timeOffs || []);
+    // Enforce max 1 full day (468 minutes)
+    if (durationMinutes > 7 * 60 + 48) {
+      return res.status(400).json({ status: "REJECTED", reason: "Total time off exceeds maximum allowed duration (1 Full Day)" });
+    }
     const end = new Date(start.getTime() + durationMinutes * 60 * 1000);
 
     if (intersectsOfficeHoursOnWeekday(start, end)) {
@@ -123,10 +139,14 @@ app.post(`${urls.APPLY}/:id`, asyncHandler(async (req, res) => {
   const { application, actingApproverCorpId } = req.body;
   const { id } = req.params;
 
-  // Validate OT does not intersect office hours on weekdays
+  // Validate OT does not intersect office hours on weekdays and total not exceed 1 full day
   try {
     const start = new Date(application.task.date);
     const durationMinutes = calculateOtDurationMinutes(application.timeOffs || []);
+    // Enforce max 1 full day (468 minutes)
+    if (durationMinutes > 7 * 60 + 48) {
+      return res.status(400).json({ status: "REJECTED", reason: "Total time off exceeds maximum allowed duration (1 Full Day)" });
+    }
     const end = new Date(start.getTime() + durationMinutes * 60 * 1000);
 
     if (intersectsOfficeHoursOnWeekday(start, end)) {
